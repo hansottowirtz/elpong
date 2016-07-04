@@ -1,4 +1,5 @@
 # HTTPong
+##### v1.0.0-rc1
 
 ### This is a draft, please contribute!
 
@@ -133,6 +134,8 @@ A Pre Element is the simple JSON object returned by the API.
 An Element is a class that acts a wrapper around the Pre Element, and it
 provides functions like relations and actions.
 
+### Other
+
 #### Embedded Elements and Collections
 
 One of the strengths of HTTPong is the ability to embed Elements and Collections
@@ -193,6 +196,10 @@ This Pre Element is converted:
   apple_stem_id: 3
 }
 ```
+The `apple_stem_id` field can be changed with key `associated_field` key.
+The apple can be retrieved with `stem.relations.getApple()`, and the
+stem with `apple.relations.getStem()`
+
 #### Singular
 
 ```json
@@ -211,10 +218,17 @@ The processor must support:
 - `String`
 - `Array`
 
+#### Merging Elements
+
+When an Element is merged with a Pre Element, for example when it is updated
+with a do action, it should overwrite all fields that are in the Pre Element,
+except when it's a embedded Element or embedded Collection. If a field is
+not present (not defined) on the Pre Element, then it is not overwritten.
+
 ### Relations
 
 Relations are totally distinct from fields,
-and two related types of relations are also distinct.
+and two related types of relations are also distinct.<br/>
 That means a `has_many` relation will not check the `belongs_to` relation
 on the other collection, their keys must be defined seperately.
 
@@ -226,7 +240,8 @@ A pig belongs to a human: the pig has a `human_id` field.
 
 ###### Has one
 
-A pig has one human: the human has a `pig_id` field.
+A pig has one human: the human has a `pig_id` field.<br/>
+This is actually just has many, but it takes the first from the list.
 
 ###### Has many
 
@@ -281,8 +296,6 @@ This will result in a `getHuman()` function.
 }
 ```
 These two have the same result, a `getPigs()` function.
-
-
 
 #### Polymorphism
 
@@ -374,21 +387,72 @@ e.g.
 }
 ```
 
-#### Merging Elements
+### More API
+#### Actions & collection actions
 
-When an Element is merged with a Pre Element, for example when it is updated
-with a do action, it should overwrite all fields that are in the Pre Element,
-except when it's a embedded Element or embedded Collection. If a field is
-not present (not defined) on the Pre Element, then it is not overwritten.
+Built in actions:
 
-#### Actions
+`GET` is meant to get, refresh or reload the fields of an Element.<br/>
+`POST` is meant to save, and thereby assign a selector value to an Element.<br/>
+`PUT` is meant to push updates to the server.<br/>
+`DELETE` is meant to remove the Element from the server database.<br/>
 
-`GET` is meant to get, refresh or reload the fields of an Element.
-`POST` is meant to save, and thereby assign a selector value to an Element.
-`PUT` is meant to push updates to the server.
-`DELETE` is meant to remove the Element from the server database.
+Custom actions:
 
-`exclude_data`
-`without_selector`
+With `without_data` the data is set to null.<br/>
+With `without_selector` the url is like a collection action url. Use it if you
+want to send along the Element, because a Collection action sends nothing.<br/>
+With `path` you can set another path if the action name has another name.<br/>
+With `returns_other`, the returned data will not be merged with the Element data.
+This only applies to Elements.
+
+Difference between actions and collection actions:
+
+- Collection actions send null by default, actions send data when `exclude_data`
+isn't true.
+- Collection actions never have a selector value, actions do when
+`without_selector` isn't true.
+- Actions send element updates back, except when `returns_other` is true.
+
+`Users`:
+```json
+"actions": {
+  "login": {
+    "method": "POST",
+    "without_selector": true
+  },
+  "register": {
+    "method": "POST",
+    "without_selector": true
+  }
+},
+"collection_actions": {
+  "get_me": {
+    "method": "GET",
+    "path": "me"
+  },
+  "logout": {
+    "method": "DELETE"
+  }
+}
+```
+The urls are:
+
+`/api/users/login`: Sends the user data to the server.<br/>
+`/api/users/register`: Sends the user data to the server.<br/>
+`/api/users/me`: You need to handle the response yourself.<br/>
+`/api/users/logout`: You can choose between collection actions and normal
+actions here, they both send null.<br/>
+
+#### Sending and receiving data
+
+When an Element is sent, it is converted to JSON again.
+The embedded Elements and Collections are not included, the associated field
+for the embedded Element is included. The elements in the embedded Collection
+should be updated seperately.
+
+#### Sending and receiving extras
+
+Extra data can be put in the headers.
 
 [crud]: https://en.wikipedia.org/wiki/Create,_read,_update_and_delete
