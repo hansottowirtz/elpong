@@ -11,7 +11,7 @@
 ##### [Rails][rails]
 
 [js]: https://github.com/hansottowirtz/httpong-js
-[angular]: https://github.com/hansottowirtz/httpong-angularjs
+[angularjs]: https://github.com/hansottowirtz/httpong-angularjs
 [jquery]: https://github.com/hansottowirtz/httpong-jquery
 [ruby]: https://github.com/hansottowirtz/httpong-ruby
 [rails]: https://github.com/hansottowirtz/httpong-rails
