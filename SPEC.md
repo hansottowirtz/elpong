@@ -1,9 +1,9 @@
-# HTTPong
-##### v1.0.0-rc1
+# Elpong
+##### v0.4.0-beta
 
 ### This is a draft, please contribute!
 
-HTTPong is meant to be a simple, intuitive way for creating an API for a website
+Elpong is meant to be a simple, intuitive way for creating an API for a website
 or app, and using that API on the client side.
 
 It is a RESTful, JSON-based API protocol that intents to standardize
@@ -26,10 +26,11 @@ e.g.
 ```json
 {
   "name": "animal-farm",
+  "selector": "id",
   "collections": {
     "pigs": {
       "fields": {
-        "id": { "selector": true },
+        "id": {},
         "name": {},
         "boss_id": { "reference": true }
       },
@@ -48,7 +49,7 @@ e.g.
     },
     "humans": {
       "fields": {
-        "id": { "selector": true },
+        "id": {},
         "name": {}
       },
       "relations": {
@@ -100,17 +101,18 @@ And one human:
 As Napoleon is his own boss, he does not relate to a human.
 Snowball does have a boss, however.
 
-A method like `snowball.relations.getBoss()` must therefore return
+A method like `snowball.relations.boss()` must therefore return
 Mr. Jones.
 
-`jones.relations.getPigs()` must return a list of his pigs, in this case
+`jones.relations.pigs()` must return a list of his pigs, in this case
 only Snowball.
 
-`napoleon.relations.getBoss()` must return nothing.
+`napoleon.relations.boss()` must return nothing.
 
 #### Selector
 A collection can only have one selector field, and it must be unique. It is
-typically something like `id`, `uid` or `uuid`.
+typically something like `id`, `uid` or `uuid`. If an element doesn't have
+a selector, it is new, and not yet saved on the server.
 
 ### API
 
@@ -149,13 +151,14 @@ e.g.
 ```json
 {
   "name": "animal-farm",
+  "selector": "id",
   "collections": {
     "apples": {
       "fields": {
-        "id": {"selector": true},
+        "id": {},
         "kind": {},
         "apple_stem": {"embedded_element": true},
-        "apple_stem_id": {"only_send": true, "reference": true}
+        "apple_stem_id": {"no_send": true, "reference": true}
       },
       "relations": {
         "belongs_to": {
@@ -165,7 +168,7 @@ e.g.
     },
     "apple_stems": {
       "fields": {
-        "id": {"selector": true}
+        "id": {}
       },
       "relations": {
         "has_one": {
@@ -196,9 +199,9 @@ This Pre Element is converted:
   apple_stem_id: 3
 }
 ```
-The `apple_stem_id` field can be changed with key `associated_field` key.
-The apple can be retrieved with `stem.relations.getApple()`, and the
-stem with `apple.relations.getStem()`
+The `apple_stem_id` field can be changed with key `field` key.
+The apple can be retrieved with `stem.relations.apple()`, and the
+stem with `apple.relations.stem()`
 
 #### Singular
 
@@ -207,16 +210,6 @@ stem with `apple.relations.getStem()`
   "singular": "goose"
 }
 ```
-
-#### Type checking
-
-If a `type` key is set on a field, then the element processor will throw when the field is not of the desired type.
-The processor must support:
-
-- `Integer`: a whole number
-- `Number`: any number, including integers
-- `String`
-- `Array`
 
 #### Merging Elements
 
@@ -234,16 +227,16 @@ on the other collection, their keys must be defined seperately.
 
 There are three types of relations:
 
-###### Belongs to
+##### Belongs to
 
 A pig belongs to a human: the pig has a `human_id` field.
 
-###### Has one
+##### Has one
 
 A pig has one human: the human has a `pig_id` field.<br/>
 This is actually just has many, but it takes the first from the list.
 
-###### Has many
+##### Has many
 
 A human has many pigs: a pig has a `human_id` field.
 
@@ -264,7 +257,7 @@ e.g.
   }
 }
 ```
-This will result in a `getBoss()` function.
+This will result in a `boss()` function.
 ```json
 {
   "belongs_to": {
@@ -274,42 +267,39 @@ This will result in a `getBoss()` function.
   }
 }
 ```
-This will result in a `getHuman()` function.
+This will result in a `human()` function.
 
 `Humans`:
-```json
-{
-  "has_many": {
-    "pigs": {
-      "as": "boss"
-    }
+```javascript
+"has_many": {
+  "pigs": {
+    "as": "boss"
   }
 }
 ```
-```json
-{
-  "has_many": {
-    "pigs": {
-      "field": "boss_id"
-    }
+```javascript
+"has_many": {
+  "pigs": {
+    "field": "boss_id"
   }
 }
 ```
-These two have the same result, a `getPigs()` function.
+These two have the same result, a `pigs()` function.
 
 #### Polymorphism
 
-When the `polymorphism` key is true on a belongs_to relation,
+When the `polymorphic` key is true on a belongs_to relation,
 there must be a `{name}_collection` field, and a `{name}_{selector_name}`.
 
 e.g.
-```json
+```javascript
 {
   "name": "pulser",
+  "selector": "id",
   "collections": {
     "controls": {
       "fields": {
-        "id": {"selector": true},
+        "id": {},
         "name": {}
       },
       "relations": {
@@ -320,7 +310,7 @@ e.g.
     },
     "devices": {
       "fields": {
-        "id": {"selector": true},
+        "id": {},
         "name": {}
       },
       "relations": {
@@ -331,7 +321,7 @@ e.g.
     },
     "plugs": {
       "fields": {
-        "id": {"selector": true},
+        "id": {},
         "block_collection": {},
         "block_id": {"reference": true}
       },
@@ -363,16 +353,15 @@ Four plugs:
 {id: 4, block_collection: 'devices', block_id: 1}
 ```
 
-`button.relations.getPlugs()` must return a list with `plug1`.
-`slider.relations.getPlugs()` must return a list with `plug2`.
-`lamp.relations.getPlugs()` must return a list with `plug3` and `plug4`.
-`plug1.relations.getBlock()` must return `button`.
-`plug2.relations.getBlock()` must return `slider`.
-`plug3.relations.getBlock()` must return `lamp`.
-`plug4.relations.getBlock()` must return `lamp`.
+`button.relations.plugs()` must return a list with `plug1`.
+`slider.relations.plugs()` must return a list with `plug2`.
+`lamp.relations.plugs()` must return a list with `plug3` and `plug4`.
+`plug1.relations.block()` must return `button`.
+`plug2.relations.block()` must return `slider`.
+`plug3.relations.block()` must return `lamp`.
+`plug4.relations.block()` must return `lamp`.
 
-By default, `polymorphic` uses the collection's own selector field, but that
-can be changed with `collection_selector_field`. The collection_field can be
+The collection_field can be
 changed with `collection_field`.
 
 e.g.
@@ -381,7 +370,6 @@ e.g.
   "block": {
     "polymorphic": true,
     "field": "block_id",
-    "collection_selector_field": "id",
     "collection_field": "block_collection"
   }
 }
@@ -399,8 +387,8 @@ Built in actions:
 
 Custom actions:
 
-With `without_data` the data is set to null.<br/>
-With `without_selector` the url is like a collection action url. Use it if you
+With `no_data` the data is set to null.<br/>
+With `no_selector` the url is like a collection action url. Use it if you
 want to send along the Element, because a Collection action sends nothing.<br/>
 With `path` you can set another path if the action name has another name.<br/>
 With `returns_other`, the returned data will not be merged with the Element data.
@@ -411,19 +399,19 @@ Difference between actions and collection actions:
 - Collection actions send null by default, actions send data when `exclude_data`
 isn't true.
 - Collection actions never have a selector value, actions do when
-`without_selector` isn't true.
+`no_selector` isn't true.
 - Actions send element updates back, except when `returns_other` is true.
 
 `Users`:
-```json
+```javascript
 "actions": {
   "login": {
     "method": "POST",
-    "without_selector": true
+    "no_selector": true
   },
   "register": {
     "method": "POST",
-    "without_selector": true
+    "no_selector": true
   }
 },
 "collection_actions": {
@@ -449,7 +437,7 @@ actions here, they both send null.<br/>
 When an Element is sent, it is converted to JSON again.
 The embedded Elements and Collections are not included, the associated field
 for the embedded Element is included. The elements in the embedded Collection
-should be updated seperately.
+should be updated separately.
 
 #### Sending and receiving extras
 

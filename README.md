@@ -1,4 +1,4 @@
-# HTTPong Spec
+# Elpong Spec
 
 #### Read the spec [here](../master/SPEC.md)
 
@@ -6,11 +6,11 @@
 
 ### [Javascript][js]
 ##### [AngularJS][angularjs]
-##### [JQuery][jquery]
+##### [jQuery][jquery]
 ### [Ruby][ruby]
 ##### [Rails][rails]
 
-[js]: https://github.com/hansottowirtz/httpong-js
+[js]: https://github.com/hansottowirtz/elpong-js
 [angularjs]: https://github.com/hansottowirtz/httpong-angularjs
 [jquery]: https://github.com/hansottowirtz/httpong-jquery
 [ruby]: https://github.com/hansottowirtz/httpong-ruby
