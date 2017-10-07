@@ -142,10 +142,16 @@ provides functions like relations and actions.
 
 One of the strengths of HTTPong is the ability to embed Elements and Collections
 in other Elements. This is done with the `embedded_element` and the
-`embedded_collection` keys. When a Pre Element with a `embedded_element` field
+`embedded_collection` keys. When a Pre Element with one or both of these keys
 is added to a Collection, the embedded Pre Elements are added to their Collection,
-or merged with existing Elements with the same selector value. Then, its
-selector value are set to their associated field.
+or merged with existing Elements with the same selector value.
+
+The collection
+
+Note that embedded Elements and Collections is mostly just a way to "ship" other Elements.
+They do not interact with the Element it's embedded in, except if a reference field is detected.
+The reference field, `apple_stem_id`, will be set to `apple_stem.id` if it's undefined. It can be
+overridden with `reference_field`.
 
 e.g.
 ```json
@@ -157,12 +163,12 @@ e.g.
       "fields": {
         "id": {},
         "kind": {},
-        "apple_stem": {"embedded_element": true},
-        "apple_stem_id": {"no_send": true, "reference": true}
+        "stem": {"embedded_element": true, "collection": "apple_stems"},
+        "stem_id": {"reference": true}
       },
       "relations": {
         "belongs_to": {
-          "apple_stem": {}
+          "stem": {}
         }
       }
     },
@@ -172,7 +178,7 @@ e.g.
       },
       "relations": {
         "has_one": {
-          "apple": {}
+          "apple": {"field": "stem_id"}
         }
       }
     }
@@ -387,16 +393,16 @@ Built in actions:
 
 Custom actions:
 
-With `no_data` the data is set to null.<br/>
+With `no_data` the data sent to the server is set to null.<br/>
 With `no_selector` the url is like a collection action url. Use it if you
-want to send along the Element, because a Collection action sends nothing.<br/>
-With `path` you can set another path if the action name has another name.<br/>
+want to send along an Element, because a Collection action sends no data.<br/>
+With `path` you can set the path. The default is the action name<br/>
 With `returns_other`, the returned data will not be merged with the Element data.
 This only applies to Elements.
 
 Difference between actions and collection actions:
 
-- Collection actions send null by default, actions send data when `exclude_data`
+- Collection actions send null by default, actions send the element when `no_data`
 isn't true.
 - Collection actions never have a selector value, actions do when
 `no_selector` isn't true.
